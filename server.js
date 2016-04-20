@@ -52,13 +52,10 @@ function zone_record(record) {
 function zone_file(template, records) {
   template_records = []
   var domain, record;
-  for (domain in records.A) {
-    record = records.A[domain];
-    template_records.push(zone_record(record));
-  }
-  for (domain in records.AAAA) {
-    record = records.AAAA[domain];
-    template_records.push(zone_record(record));
+  for (typ in records){
+    for (domain in records[typ]){
+      template_records.push(zone_record(records[typ][domain]));
+    }
   }
   dynamic_dns_records = template_records.join('\n') + "\n";
   var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records).replace("__SERIAL_NUMBER__", (new Date()).getTime());
@@ -72,10 +69,7 @@ try {
     console.log('Read database from previous session')
 } catch (error) {
   console.error('Failed to read database from previous session: ' + error)
-  records = {
-    A:{},
-    AAAA:{}
-  }
+  records = {}
 }
 
 function handleRequest(req, res){
@@ -90,25 +84,27 @@ function handleRequest(req, res){
     respond(res, 401, {error:'unauthorized'})
     return;
   }
+  var queryParams = url.parse(req.url,true).query || {};
   //get ip
-  var ip = (url.parse(req.url,true).query||{}).ip ||
+  var ip = queryParams.ip ||
    req.headers['x-forwarded-for'] ||
    req.connection.remoteAddress ||
    req.socket.remoteAddress ||
    req.connection.socket.remoteAddress;
   //get domain from query
-  var domain = (url.parse(req.url,true).query||{}).domain;
+  var domain = queryParams.domain;
   if(!domain){
     respond(res, 404, {error:'no domain'});
     return;
   }
-  //update record object
-  var ttl = parseInt((url.parse(req.url,true).query||{}).ttl);
+  //update parse ttl and ipv6
+  var ttl = parseInt(queryParams.ttl);
   var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==-1;
   if (!ipv6) ip = ip.replace(/^::ffff:/, '');
-
-  var record = {ip: ip, domain:domain, type: (ipv6 ? "AAAA" : "A")};
+  //update record object
+  var record = {ip: ip, domain:domain, type: queryParams.type||(ipv6 ? "AAAA" : "A")};
   if (ttl) record.ttl = ttl;
+  records[record.type] = records[record.type] || {}
   records[record.type][domain] = record;
 
   //save bind file
@@ -128,13 +124,13 @@ function handleRequest(req, res){
   });
 
   //save dnsDB.json
-  fs.writeFile(config.database_path, JSON.stringify(records), function(err){
+  fs.writeFile(config.database_path, JSON.stringify(records,null,4), function(err){
     if(err){
         console.error('Error writeing dnsDB.json: ' + err);
     }
   })
 
-  respond(res, 200, records.AAAA[domain] || records.A[domain]);
+  respond(res, 200, records[record.type][domain]);
 }
 
 function sendSIGHUP(){
