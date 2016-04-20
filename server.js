@@ -100,14 +100,13 @@ function handleRequest(req, res){
     return;
   }
   //update record object
+  var ttl = parseInt((url.parse(req.url,true).query||{}).ttl);
   var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==-1;
-  if (ipv6) {
-    records.AAAA[domain] = {ip:ip, domain:domain, type: "AAAA"};
-  } else {
-    // IPv4 addresses come across as "::ffff:127.0.0.1"
-    ip = ip.replace(/^::ffff:/, '');
-    records.A[domain] = {ip:ip, domain:domain, type: "A"};
-  }
+  if (!ipv6) ip = ip.replace(/^::ffff:/, '');
+
+  var record = {ip: ip, domain:domain, type: (ipv6 ? "AAAA" : "A")};
+  if (ttl) record.ttl = ttl;
+  records[record.type][domain] = record;
 
   //save bind file
   fs.readFile(config.zone_template_path, 'utf8', function(err, template) {
