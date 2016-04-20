@@ -27,7 +27,9 @@ try {
     var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
     extend(config, loadedConfig)
     console.log('Read config file')
-} catch (error) {}
+} catch (error) {
+  console.error('Failed to read config file:' + error)
+}
 
 //utils
 function decodeBase64(str) {
@@ -69,10 +71,11 @@ try {
     records = JSON.parse(fs.readFileSync(config.database_path, 'utf8'))
     console.log('Read database from previous session')
 } catch (error) {
-    records = {
-        A:{},
-        AAAA:{}
-    }
+  console.error('Failed to read database from previous session: ' + error)
+  records = {
+    A:{},
+    AAAA:{}
+  }
 }
 
 function handleRequest(req, res){
@@ -117,6 +120,8 @@ function handleRequest(req, res){
       fs.writeFile(config.zone_output_path, zone, function(err) {
         if (err) {
             console.error("Error writing zone file: " + err);
+        } else {
+          sendSIGHUP();
         }
       });
     }
@@ -129,6 +134,10 @@ function handleRequest(req, res){
     }
   })
 
+  respond(res, 200, records.AAAA[domain] || records.A[domain]);
+}
+
+function sendSIGHUP(){
   //send SIGHUP to nds
   if(config['dns_pid_file']){
      fs.readFile(config['dns_pid_file'], 'utf8', function(err, pid){
@@ -143,8 +152,6 @@ function handleRequest(req, res){
        }
      })
   }
-
-  respond(res, 200, records.AAAA[domain] || records.A[domain]);
 }
 
 //Lets start our server
