@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 //import libs
 var http = require('http'),
     fs = require('fs'),
@@ -21,6 +22,7 @@ var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*)
 var records;
 try {
     records = JSON.parse(fs.readFileSync('dnsDB.json', 'utf8'))
+    console.log('Read dnsDB.json from previous session')
 } catch (error) {
     records = {
         A:{},
