@@ -4,14 +4,21 @@ var http = require('http'),
     fs = require('fs'),
     url = require('url');
 
-var config = {
-    'api_username': 'ddns',
-    'api_password': 'serversideblowjob',
-    'port': 8080,
-    'zone_output_path': '/etc/nsd/example.com.zone',
-    'zone_template_path': 'conf/example.com.zonetemplate',
-    'database_path': 'dnsDB.json',
-};
+//read the config
+var config
+try {
+    config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
+    console.log('Read database from previous session')
+} catch (error) {
+    config = {
+        'api_username': 'ddns',
+        'api_password': 'serversideblowjob',
+        'port': 8080,
+        'zone_output_path': '/etc/nsd/example.com.zone',
+        'zone_template_path': 'conf/example.com.zonetemplate',
+        'database_path': 'dnsDB.json'
+    }
+}
 
 //utils
 function decodeBase64(str) {
