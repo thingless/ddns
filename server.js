@@ -73,11 +73,13 @@ function handleRequest(req, res){
     respond(res, 404, {error:'no domain'});
     return;
   }
-  ipv6 = ip.indexOf(":")!==-1;
+  var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==0;
   if (ipv6) {
-    records.AAAA[domain] = {ip:ip, ttl:1800, domain:domain}
+    records.AAAA[domain] = {ip:ip, ttl:1800, domain:domain};
   } else {
-    records.A[domain] = {ip:ip, ttl:1800, domain:domain}
+    // IPv4 addresses come across as "::ffff:127.0.0.1"
+    ip = ip.replace(/^::ffff:/, '');
+    records.A[domain] = {ip:ip, ttl:1800, domain:domain};
   }
   //save bind file
 
