@@ -130,7 +130,7 @@ function handleRequest(req, res){
        try {
          process.kill(parseInt(pid), 'SIGHUP');
        } catch (error) {
-         console.error('Error sending SIGHUP to dns process' + error)
+         console.error('Error sending SIGHUP to dns process: ' + error)
        }
      })
   }
