@@ -135,7 +135,7 @@ function handleRequest(req, res){
      })
   }
 
-  respond(res, 200, records.AAAA[domain]);
+  respond(res, 200, records.AAAA[domain] || records.A[domain]);
 }
 
 //Lets start our server
