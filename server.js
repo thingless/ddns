@@ -88,7 +88,8 @@ function handleRequest(req, res){
     return;
   }
   //get ip
-  var ip = req.headers['x-forwarded-for'] ||
+  var ip = (url.parse(req.url,true).query||{}).ip ||
+   req.headers['x-forwarded-for'] ||
    req.connection.remoteAddress ||
    req.socket.remoteAddress ||
    req.connection.socket.remoteAddress;
