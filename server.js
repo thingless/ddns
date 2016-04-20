@@ -24,7 +24,7 @@ var config = {
     'dns_pid_file': '/run/nsd/nsd.pid',
 }
 try {
-    loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
+    var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
     extend(config, loadedConfig)
     console.log('Read config file')
 } catch (error) {}
