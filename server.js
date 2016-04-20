@@ -3,22 +3,29 @@
 var http = require('http'),
     fs = require('fs'),
     url = require('url');
-
-//read the config
-var config
-try {
-    config = JSON.parse(fs.readFileSync('config.json', 'utf8'))
-    console.log('Read database from previous session')
-} catch (error) {
-    config = {
-        'api_username': 'ddns',
-        'api_password': 'serversideblowjob',
-        'port': 8080,
-        'zone_output_path': '/etc/nsd/example.com.zone',
-        'zone_template_path': 'conf/example.com.zonetemplate',
-        'database_path': 'dnsDB.json'
+    
+function extend(obj, props) {
+    for(var prop in props) {
+        if(props.hasOwnProperty(prop)) {
+            obj[prop] = props[prop];
+        }
     }
 }
+
+//read the config
+var config = {
+    'api_username': 'ddns',
+    'api_password': 'serversideblowjob',
+    'port': 8080,
+    'zone_output_path': '/etc/nsd/example.com.zone',
+    'zone_template_path': 'conf/example.com.zonetemplate',
+    'database_path': 'dnsDB.json'
+}
+try {
+    loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
+    extend(config, loadedConfig)
+    console.log('Read database from previous session')
+} catch (error) {}
 
 //utils
 function decodeBase64(str) {
