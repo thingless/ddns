@@ -59,7 +59,7 @@ function zone_file(template, records) {
     template_records.push(zone_record(record));
   }
   dynamic_dns_records = template_records.join('\n') + "\n";
-  var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records);
+  var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records).replace("__SERIAL_NUMBER__", (new Date()).getTime());
   return zone;
 }
 
