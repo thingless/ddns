@@ -3,7 +3,7 @@
 var http = require('http'),
     fs = require('fs'),
     url = require('url');
-    
+
 function extend(obj, props) {
     for(var prop in props) {
         if(props.hasOwnProperty(prop)) {
@@ -19,12 +19,13 @@ var config = {
     'port': 8080,
     'zone_output_path': '/etc/nsd/example.com.zone',
     'zone_template_path': 'conf/example.com.zonetemplate',
-    'database_path': 'dnsDB.json'
+    'database_path': 'dnsDB.json',
+    'dns_pid_file': '/run/nsd/nsd.pid',
 }
 try {
     loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
     extend(config, loadedConfig)
-    console.log('Read database from previous session')
+    console.log('Read config file')
 } catch (error) {}
 
 //utils
@@ -102,7 +103,7 @@ function handleRequest(req, res){
       });
     }
   });
-  
+
   //save dnsDB.json
   fs.writeFile(config.database_path, JSON.stringify(records), function(err){
     if(err){
