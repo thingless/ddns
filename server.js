@@ -52,8 +52,7 @@ function handleRequest(req, res){
     respond(res, 404, {error:'no domain'});
     return;
   }
-  if(ip.indexOf(":")!==-1){
-    //ipv4
+  if(ip.indexOf(":")===-1){//ipv4
     records.A[domain] = {ip:ip, ttl:1800, domain:domain}
   } else { //then ipv6
     records.AAAA[domain] = {ip:ip, ttl:1800, domain:domain}
