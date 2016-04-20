@@ -67,7 +67,7 @@ function handleRequest(req, res){
 }
 
 //Lets start our server
-http.createServer(handleRequest).listen(PORT, function(){
+http.createServer(handleRequest).listen(8080, function(){
     //Callback triggered when server is successfully listening. Hurray!
     console.log("Server listening on: http://localhost:%s", 8080);
 });
