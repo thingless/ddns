@@ -17,7 +17,7 @@ var config = {
     'api_username': 'ddns',
     'api_password': 'serversideblowjob',
     'port': 8080,
-    'zone_output_path': '/etc/nsd/example.com.zone',
+    'zone_output_path': '/tmp/example.com.zone',
     'zone_template_path': 'conf/example.com.zonetemplate',
     'database_path': 'dnsDB.json',
     'dns_pid_file': '/run/nsd/nsd.pid',
@@ -38,6 +38,22 @@ function respond(res, code, json){
   res.end();
 }
 var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*) *$/
+
+function zone_file(template, records) {
+  template_records = []
+  var domain, record;
+  for (domain in records.A) {
+    record = records.A[domain];
+    template_records.push(record.domain + " IN A " + record.ip)
+  }
+  for (domain in records.AAAA) {
+    record = records.AAAA[domain];
+    template_records.push(record.domain + " IN AAAA " + record.ip)
+  }
+  dynamic_dns_records = template_records.join('\n') + "\n";
+  var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records);
+  return zone;
+}
 
 //read the dnsDB
 var records;
@@ -81,25 +97,13 @@ function handleRequest(req, res){
     ip = ip.replace(/^::ffff:/, '');
     records.A[domain] = {ip:ip, ttl:1800, domain:domain};
   }
+
   //save bind file
-
-  template_records = []
-  var domain, record;
-  for (domain in records.A) {
-    record = records.A[domain];
-    template_records.push(record.domain + " IN A " + record.ip)
-  }
-  for (domain in records.AAAA) {
-    record = records.AAAA[domain];
-    template_records.push(record.domain + " IN AAAA " + record.ip)
-  }
-  dynamic_dns_records = template_records.join('\n') + "\n";
-
   fs.readFile(config.zone_template_path, 'utf8', function(err, template) {
     if (err) {
       console.error("Error reading zonetemplate file: " + err);
     } else {
-      zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records);
+      var zone = zone_file(template, records);
       fs.writeFile(config.zone_output_path, zone, function(err) {
         if (err) {
             console.error("Error writing zone file: " + err);
