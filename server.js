@@ -16,7 +16,7 @@ function extend(obj, props) {
 //read the config
 var config = {
     'api_username': 'ddns',
-    'api_password': 'serversideblowjob',
+    'api_password': 'password',
     'port': 8080,
     'zone_output_path': '/tmp/example.com.zone',
     'zone_template_path': 'conf/example.com.zonetemplate',
