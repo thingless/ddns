@@ -2,8 +2,7 @@
 //import libs
 var http = require('http'),
     fs = require('fs'),
-    url = require('url'),
-    qs = require('querystring');
+    url = require('url');
 
 var config = {
     'api_username': 'ddns',
@@ -17,9 +16,6 @@ var config = {
 //utils
 function decodeBase64(str) {
   return new Buffer(str, 'base64').toString()
-}
-function parseQS(reqUrl){
-  return qs.parse(url.parse(reqUrl, true).query)
 }
 function respond(res, code, json){
   res.writeHead(code, {"Content-Type": "application/json"});
@@ -57,7 +53,7 @@ function handleRequest(req, res){
    req.connection.remoteAddress ||
    req.socket.remoteAddress ||
    req.connection.socket.remoteAddress;
-  var domain = (parseQS(request.url, true)||{}).domain;
+  var domain = (url.parse(req.url,true).query||{}).domain;
   if(!domain){
     respond(res, 404, {error:'no domain'});
     return;
@@ -75,6 +71,7 @@ function handleRequest(req, res){
         console.error('Error writeing dnsDB.json: ' + err);
     }
   })
+  respond(res, 200, records.AAAA[domain]);
 }
 
 //Lets start our server
