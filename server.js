@@ -93,15 +93,17 @@ function handleRequest(req, res){
     record = records.AAAA[domain];
     template_records.push(record.domain + " IN AAAA " + record.ip)
   }
-  dynamic_dns_records = template_section.join('\n') + "\n";
+  dynamic_dns_records = template_records.join('\n') + "\n";
 
-  fs.readFile(config.zone_template_path, function(err, template) {
+  fs.readFile(config.zone_template_path, 'utf8', function(err, template) {
     if (err) {
       console.error("Error reading zonetemplate file: " + err);
     } else {
       zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records);
       fs.writeFile(config.zone_output_path, zone, function(err) {
-        console.error("Error writing zone file: " + err);
+        if (err) {
+            console.error("Error writing zone file: " + err);
+        }
       });
     }
   });
