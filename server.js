@@ -2,7 +2,8 @@
 //import libs
 var http = require('http'),
     fs = require('fs'),
-    url = require('url');
+    url = require('url'),
+    process = require('process')
 
 function extend(obj, props) {
     for(var prop in props) {
@@ -114,6 +115,22 @@ function handleRequest(req, res){
         console.error('Error writeing dnsDB.json: ' + err);
     }
   })
+
+  //send SIGHUP to nds
+  if(config['dns_pid_file']){
+     fs.readFile(config['dns_pid_file'], 'utf8', function(err, pid){
+       if(err){
+         console.error('Error reading dns pid file: ' + err);
+         return;
+       }
+       try {
+         process.kill(parseInt(pid), 'SIGHUP');
+       } catch (error) {
+         console.error('Error sending SIGHUP to dns process' + error)
+       }
+     })
+  }
+
   respond(res, 200, records.AAAA[domain]);
 }
 
