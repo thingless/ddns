@@ -35,12 +35,14 @@ sudo apt-get install nsd nodejs
 sudo cp conf/nsd.conf /etc/nsd
 ```
 * Copy `conf/example.com.zone` to `/etc/nsd/YOUR_FQDN.zone` and edit
-`/etc/nsd/nsd.conf` to point to that file. Also edit the zone file to remove the
-replacable variables.
+  `/etc/nsd/nsd.conf` to point to that file. Also edit the zone file to remove the
+  replacable variables.
 * Copy `conf/example.com.zonetemplate` to `./YOUR_FQDN.zonetemplate` and edit
-`config.json` to match. Also edit the new zonetemplate file to match your
-domain.
+  `config.json` to match. Also edit the new zonetemplate file to match your
+  domain.
 * Start NSD. `sudo service nsd start`
 * Edit the config file to change port, username, password, etc
+* Ensure that node can write the zone file: `chown nobody.nobody /etc/nsd/YOUR_FQDN.zone`
+* Ensure that node can read/write everything in this directory: `chown nobody.nobody -R .`
 * Start node (probably under supervisor - see `conf/ddns.supervisor.conf` for
-  example. Directly: `nodejs server.js`
+  example. Directly: `sudo -u nobody node server.js`
