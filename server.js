@@ -4,6 +4,16 @@ var http = require('http'),
     fs = require('fs'),
     url = require('url'),
     qs = require('querystring');
+
+var config = {
+    'api_username': 'ddns',
+    'api_password': 'serversideblowjob',
+    'port': 8080,
+    'zone_output_path': '/etc/nsd/example.com.zone',
+    'zone_template_path': 'conf/example.com.zonetemplate',
+    'database_path': 'dnsDB.json',
+};
+
 //utils
 function decodeBase64(str) {
   return new Buffer(str, 'base64').toString()
@@ -21,8 +31,8 @@ var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*)
 //read the dnsDB
 var records;
 try {
-    records = JSON.parse(fs.readFileSync('dnsDB.json', 'utf8'))
-    console.log('Read dnsDB.json from previous session')
+    records = JSON.parse(fs.readFileSync(config.database_path, 'utf8'))
+    console.log('Read database from previous session')
 } catch (error) {
     records = {
         A:{},
@@ -38,13 +48,13 @@ function handleRequest(req, res){
       parts=auth.split(/:/),                          // split on colon
       username=parts[0],
       password=parts[1];
-  if(username!=="ddns" || password!=="serversideblowjob"){
+  if(username !== config.api_username || password !== config.api_password){
     respond(res, 401, {error:'unauthorized'})
     return;
   }
   //get ip
-  var ip = req.headers['x-forwarded-for'] || 
-   req.connection.remoteAddress || 
+  var ip = req.headers['x-forwarded-for'] ||
+   req.connection.remoteAddress ||
    req.socket.remoteAddress ||
    req.connection.socket.remoteAddress;
   var domain = (parseQS(request.url, true)||{}).domain;
@@ -58,9 +68,9 @@ function handleRequest(req, res){
     records.AAAA[domain] = {ip:ip, ttl:1800, domain:domain}
   }
   //save bind file
-  
+
   //save dnsDB.json
-  fs.writeFile('dnsDB.json', JSON.stringify(records), function(err){
+  fs.writeFile(config.database_path, JSON.stringify(records), function(err){
     if(err){
         console.error('Error writeing dnsDB.json: ' + err);
     }
@@ -68,7 +78,7 @@ function handleRequest(req, res){
 }
 
 //Lets start our server
-http.createServer(handleRequest).listen(8080, function(){
+http.createServer(handleRequest).listen(config.port, function(){
     //Callback triggered when server is successfully listening. Hurray!
-    console.log("Server listening on: http://localhost:%s", 8080);
+    console.log("Server listening on: http://localhost:%s", config.port);
 });
