@@ -92,11 +92,13 @@ function handleRequest(req, res){
    req.connection.remoteAddress ||
    req.socket.remoteAddress ||
    req.connection.socket.remoteAddress;
+  //get domain from query
   var domain = (url.parse(req.url,true).query||{}).domain;
   if(!domain){
     respond(res, 404, {error:'no domain'});
     return;
   }
+  //update record object
   var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==-1;
   if (ipv6) {
     records.AAAA[domain] = {ip:ip, domain:domain, type: "AAAA"};
