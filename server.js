@@ -72,13 +72,37 @@ function handleRequest(req, res){
     respond(res, 404, {error:'no domain'});
     return;
   }
-  if(ip.indexOf(":")===-1){//ipv4
-    records.A[domain] = {ip:ip, ttl:1800, domain:domain}
-  } else { //then ipv6
+  ipv6 = ip.indexOf(":")!==-1;
+  if (ipv6) {
     records.AAAA[domain] = {ip:ip, ttl:1800, domain:domain}
+  } else {
+    records.A[domain] = {ip:ip, ttl:1800, domain:domain}
   }
   //save bind file
 
+  template_records = []
+  var domain, record;
+  for (domain in records.A) {
+    record = records.A[domain];
+    template_records.push(record.domain + " IN A " + record.ip)
+  }
+  for (domain in records.AAAA) {
+    record = records.AAAA[domain];
+    template_records.push(record.domain + " IN AAAA " + record.ip)
+  }
+  dynamic_dns_records = template_section.join('\n') + "\n";
+
+  fs.readFile(config.zone_template_path, function(err, template) {
+    if (err) {
+      console.error("Error reading zonetemplate file: " + err);
+    } else {
+      zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records);
+      fs.writeFile(config.zone_output_path, zone, function(err) {
+        console.error("Error writing zone file: " + err);
+      });
+    }
+  });
+  
   //save dnsDB.json
   fs.writeFile(config.database_path, JSON.stringify(records), function(err){
     if(err){
