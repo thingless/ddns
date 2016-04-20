@@ -40,16 +40,23 @@ function respond(res, code, json){
 }
 var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*) *$/
 
+function zone_record(record) {
+  if (record.ttl) {
+    return record.domain + " IN " + record.type + " " + record.ttl + " " + record.ip;
+  } else {
+    return record.domain + " IN " + record.type + " " + record.ip;
+  }
+}
 function zone_file(template, records) {
   template_records = []
   var domain, record;
   for (domain in records.A) {
     record = records.A[domain];
-    template_records.push(record.domain + " IN A " + record.ip)
+    template_records.push(zone_record(record));
   }
   for (domain in records.AAAA) {
     record = records.AAAA[domain];
-    template_records.push(record.domain + " IN AAAA " + record.ip)
+    template_records.push(zone_record(record));
   }
   dynamic_dns_records = template_records.join('\n') + "\n";
   var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records);
@@ -90,13 +97,13 @@ function handleRequest(req, res){
     respond(res, 404, {error:'no domain'});
     return;
   }
-  var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==0;
+  var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==-1;
   if (ipv6) {
-    records.AAAA[domain] = {ip:ip, ttl:1800, domain:domain};
+    records.AAAA[domain] = {ip:ip, domain:domain, type: "AAAA"};
   } else {
     // IPv4 addresses come across as "::ffff:127.0.0.1"
     ip = ip.replace(/^::ffff:/, '');
-    records.A[domain] = {ip:ip, ttl:1800, domain:domain};
+    records.A[domain] = {ip:ip, domain:domain, type: "A"};
   }
 
   //save bind file
