@@ -23,8 +23,13 @@ var config = {
     'zone_template_path': 'conf/example.com.zonetemplate',
     'database_path': 'dnsDB.json',
     'dns_pid_file': '/run/nsd/nsd.pid',
-    'param_blacklist': ['type'],
-    //'param_whitelist': ['domain', 'ttl', 'ip', 'password'], // Does nothing, for documentation
+    'param_blacklist': ['type', 'ip'],
+    'param_validation': {
+        'domain': /^[-a-zA-Z0-9]{0,200}$/,
+        'ttl': /^[1-9][0-9]{1,15}$/,
+        'password': /^.{1,100}$/,
+    },
+    //'param_whitelist': ['domain', 'ttl', 'password'], // Does nothing, for documentation
 }
 try {
     var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
@@ -93,6 +98,12 @@ function handleRequest(req, res){
   var queryParams = url.parse(req.url,true).query || {};
   for (var param of config.param_blacklist) {
     delete queryParams[param];
+  }
+  for (var param in config.param_validation) {
+    var regex = config.param_validation[param];
+    if (queryParams[param] && ! queryParams[param].match(regex)) {
+      delete queryParams[param];
+    }
   }
   //get ip
   var ip = queryParams.ip ||
