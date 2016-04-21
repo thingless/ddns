@@ -24,7 +24,7 @@ var config = {
     'database_path': 'dnsDB.json',
     'dns_pid_file': '/run/nsd/nsd.pid',
     'param_blacklist': ['type'],
-    'param_whitelist': ['domain', 'ttl', 'ip', 'password'], // Does nothing, for documentation
+    //'param_whitelist': ['domain', 'ttl', 'ip', 'password'], // Does nothing, for documentation
 }
 try {
     var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
