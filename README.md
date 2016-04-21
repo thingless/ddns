@@ -7,6 +7,7 @@ The following keys are supported (at time of writing):
 
 | Config Var         | Description                          | Default                  |
 |--------------------|--------------------------------------|--------------------------|
+|`api_anonymous_allowed`| Is basic auth required            | false (required)         |
 |`api_username`      | Username for basic auth              | ddns                     |
 |`api_password`      | Password for basic auth              | password                 |
 |`port`              | Port to listen on                    | 8080                     |
@@ -14,6 +15,7 @@ The following keys are supported (at time of writing):
 |`zone_template_path`| Input path of zone template          | example.com.zonetemplate |
 |`database_path`     | Path JSON record database            | dnsDB.json               |
 |`dns_pid_file`      | Path to PID file for your DNS server | /run/nsd/nsd.pid         |
+|`param_blacklist`| These GET parameters will be ignored    | ['type']                 |
 
 # Zone Template
 The template file is just a Bind-style zone file with two magic strings:
