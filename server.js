@@ -17,11 +17,14 @@ function extend(obj, props) {
 var config = {
     'api_username': 'ddns',
     'api_password': 'password',
+    'api_anonymous_allowed': false,
     'port': 8080,
     'zone_output_path': '/tmp/example.com.zone',
     'zone_template_path': 'conf/example.com.zonetemplate',
     'database_path': 'dnsDB.json',
     'dns_pid_file': '/run/nsd/nsd.pid',
+    'param_blacklist': ['type'],
+    'param_whitelist': ['domain', 'ttl', 'ip', 'password'], // Does nothing, for documentation
 }
 try {
     var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
@@ -38,6 +41,7 @@ function decodeBase64(str) {
 function respond(res, code, json){
   res.writeHead(code, {"Content-Type": "application/json"});
   res.write(JSON.stringify(json));
+  res.write("\n");
   res.end();
 }
 var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*) *$/
@@ -74,17 +78,22 @@ try {
 
 function handleRequest(req, res){
   //check basic auth
-  var header=req.headers['authorization']||'',        // get the header
-      token=header.split(/\s+/).pop()||'',            // and the encoded auth token
-      auth=new Buffer(token, 'base64').toString(),    // convert from base64
-      parts=auth.split(/:/),                          // split on colon
-      username=parts[0],
-      password=parts[1];
-  if(username !== config.api_username || password !== config.api_password){
-    respond(res, 401, {error:'unauthorized'})
-    return;
+  if (!config.api_anonymous_allowed) {
+    var header=req.headers['authorization']||'',        // get the header
+        token=header.split(/\s+/).pop()||'',            // and the encoded auth token
+        auth=new Buffer(token, 'base64').toString(),    // convert from base64
+        parts=auth.split(/:/),                          // split on colon
+        username=parts[0],
+        password=parts[1];
+    if(username !== config.api_username || password !== config.api_password){
+        respond(res, 401, {error:'unauthorized'})
+        return;
+    }
   }
   var queryParams = url.parse(req.url,true).query || {};
+  for (var param of config.param_blacklist) {
+    delete queryParams[param];
+  }
   //get ip
   var ip = queryParams.ip ||
    req.headers['x-forwarded-for'] ||
@@ -102,8 +111,19 @@ function handleRequest(req, res){
   var ipv6 = ip.indexOf("::ffff:")!==0 && ip.indexOf(":")!==-1;
   if (!ipv6) ip = ip.replace(/^::ffff:/, '');
   //update record object
-  var record = {ip: ip, domain:domain, type: queryParams.type||(ipv6 ? "AAAA" : "A")};
+  var type = queryParams.type || (ipv6 ? "AAAA" : "A");
+  var password = queryParams.password;
+  var record = {ip: ip, domain:domain, type: type};
   if (ttl) record.ttl = ttl;
+  if (password) record.password = password;
+
+  // Optional password auth on a per-domain basis (can be disabled in blacklist)
+  var existingPassword = records[record.type] && records[record.type][domain] && records[record.type][domain].password;
+  if (existingPassword && existingPassword !== record.password) {
+    respond(res, 401, {error:'unauthorized'})
+    return;
+  }
+
   records[record.type] = records[record.type] || {}
   records[record.type][domain] = record;
 
