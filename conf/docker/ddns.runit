@@ -1,0 +1,3 @@
+#!/bin/bash
+cd /usr/local/ddns
+exec chpst -u nsd nodejs ./server.js

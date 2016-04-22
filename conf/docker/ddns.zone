@@ -1,0 +1,24 @@
+$ORIGIN __DOMAIN__.
+$TTL 1800
+@       IN      SOA     ns1.__DOMAIN__.      admin.__DOMAIN__. (
+                        __SERIAL_NUMBER__       ; serial number
+                        3600                    ; refresh
+                        900                     ; retry
+                        1209600                 ; expire
+                        1800                    ; ttl
+                        )
+; Name servers
+                    IN      NS      ns1.__DOMAIN__.
+                    IN      NS      ns2.__DOMAIN__.
+
+; A records for name servers
+ns1                 IN      A       192.0.2.1
+ns2                 IN      A       192.0.2.2
+
+; Additional A records
+@                   IN      A       192.0.2.3
+www                 IN      A       192.0.2.3
+
+; Dynamic DNS records
+__DYNAMIC_DNS_RECORDS__
+

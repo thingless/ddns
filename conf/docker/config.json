@@ -1,0 +1,11 @@
+{
+"api_username": "ddns",
+"api_password": "supersecretpassword",
+"api_anonymous_allowed": false,
+"port": 8080,
+"zone_output_path": "/etc/nsd/ddns.zone",
+"zone_template_path": "ddns.zonetemplate",
+"database_path": "dnsDB.json",
+"dns_pid_file": "/run/nsd/nsd.pid",
+"param_blacklist": []
+}
