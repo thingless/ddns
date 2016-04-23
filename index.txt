@@ -9,3 +9,5 @@ Available parameters (some may have been disable by the administrator):
                change the entries in the future
     ttl:       ttl of the record in seconds
     type:      record type, can be A, AAAA, MX, CNAME, etc
+
+Source: https://github.com/thingless/ddns
