@@ -24,6 +24,7 @@ var config = {
     'database_path': 'dnsDB.json',
     'dns_pid_file': '/run/nsd/nsd.pid',
     'param_blacklist': ['type', 'ip'],
+    'domain_blacklist': ['www', '@', 'smtp', 'imap', 'ns', 'pop', 'pop3', 'ftp', 'm', 'mail', 'blog', 'wiki', 'ns1', 'ns2', 'ns3'],
     'param_validation': {
         'domain': /^[-a-zA-Z0-9]{0,200}$/,
         'ttl': /^[1-9][0-9]{1,15}$/,
@@ -115,6 +116,10 @@ function handleRequest(req, res){
   var domain = queryParams.domain;
   if(!domain){
     respond(res, 404, {error:'no domain'});
+    return;
+  }
+  if(config.domain_blacklist.indexOf(domain) != -1) {
+    respond(res, 401, {error:'unauthorized'});
     return;
   }
   //update parse ttl and ipv6
