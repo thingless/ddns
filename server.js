@@ -13,6 +13,10 @@ function extend(obj, props) {
     }
 }
 
+function isEmptyObject(obj) {
+  return Object.getOwnPropertyNames(obj).length == 0;
+}
+
 //read the config
 var config = {
     'api_username': 'ddns',
@@ -24,6 +28,7 @@ var config = {
     'database_path': 'dnsDB.json',
     'dns_pid_file': '/run/nsd/nsd.pid',
     'param_blacklist': ['type', 'ip'],
+    'index_file': 'index.txt',
     'domain_blacklist': ['www', '@', 'smtp', 'imap', 'ns', 'pop', 'pop3', 'ftp', 'm', 'mail', 'blog', 'wiki', 'ns1', 'ns2', 'ns3'],
     'param_validation': {
         'domain': /^[-a-zA-Z0-9]{0,200}$/,
@@ -49,6 +54,17 @@ function respond(res, code, json){
   res.write(JSON.stringify(json));
   res.write("\n");
   res.end();
+}
+function respondFile(res, path) {
+  fs.readFile(path, 'utf8', function(err, content) {
+    if (err) {
+      res.writeHead(500, {"Content-Type": "text/plain"});
+    } else {
+      res.writeHead(200, {"Content-Type": "text/plain"});
+      res.write(content);
+      res.end();
+    }
+  });
 }
 var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*) *$/
 
@@ -92,11 +108,15 @@ function handleRequest(req, res){
         username=parts[0],
         password=parts[1];
     if(username !== config.api_username || password !== config.api_password){
-        respond(res, 401, {error:'unauthorized'})
+        respond(res, 401, {error:'unauthorized'});
         return;
     }
   }
   var queryParams = url.parse(req.url,true).query || {};
+  if (isEmptyObject(queryParams)) {
+    respondFile(res, config.index_file);
+    return;
+  }
   for (var param of config.param_blacklist) {
     delete queryParams[param];
   }
