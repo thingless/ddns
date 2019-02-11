@@ -29,22 +29,7 @@ ddns writes its temporary state as JSON to `database_path`. This is used to
 regenerate the zone file whenever anything changes.
 
 # How to run?
-On Ubuntu 14.04:
+To install on Ubuntu 18.04 using the setup script
+`sudo bash ./setup.sh`
 
-* Basic setup:
-```bash
-sudo apt-get install nsd nodejs
-sudo cp conf/nsd.conf /etc/nsd
-```
-* Copy `conf/example.com.zone` to `/etc/nsd/YOUR_FQDN.zone` and edit
-  `/etc/nsd/nsd.conf` to point to that file. Also edit the zone file to remove the
-  replacable variables.
-* Copy `conf/example.com.zonetemplate` to `./YOUR_FQDN.zonetemplate` and edit
-  `config.json` to match. Also edit the new zonetemplate file to match your
-  domain.
-* Start NSD. `sudo service nsd start`
-* Edit the config file to change port, username, password, etc
-* Ensure that node can write the zone file: `chown nobody.nobody /etc/nsd/YOUR_FQDN.zone`
-* Ensure that node can read/write everything in this directory: `chown nobody.nobody -R .`
-* Start node (probably under supervisor - see `conf/ddns.supervisor.conf` for
-  example. Directly: `sudo -u nobody node server.js`
+Start node `sudo -u nobody node server.js`. You should probably run under supervisor. See `conf/ddns.supervisor.conf` for an  example config.
