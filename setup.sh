@@ -28,7 +28,7 @@ sed -i "s/192.0.2.1/$(curl -4 -s 'https://icanhazip.com/')/g" /etc/nsd/"$1".zone
 cp conf/example.com.zonetemplate ./"$1".zonetemplate
 sed -i "s/example.com/$1/g" ./"$1".zonetemplate
 service nsd restart
-chown nobody /etc/nsd/"$1".zone
-chown nobody -R .
+chown nsd /etc/nsd/"$1".zone
+chown nsd -R .
 echo "Setup Script Ran. Checking..."
 host $1 127.0.0.1
