@@ -84,7 +84,7 @@ function zone_file(template, records) {
     }
   }
   dynamic_dns_records = template_records.join('\n') + "\n";
-  var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records).replace("__SERIAL_NUMBER__", (new Date()).getTime());
+  var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records).replace("__SERIAL_NUMBER__", Math.floor(new Date()).getTime()/1000);
   return zone;
 }
 
