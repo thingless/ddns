@@ -41,7 +41,7 @@ This is a ddns provider. To add a subdomain, append URL parameters.
 
 Example: /?domain=www2&ttl=600
 
-Available parameters (some may have been disable by the administrator):
+Available parameters (some may have been disabled by the administrator):
     domain:    the subdomain to add a record for
     ip:        the ip address to add (uses your current IP if missing)
     password:  lock the subdomain with a password, which will be required to
