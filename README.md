@@ -33,3 +33,21 @@ To install on Ubuntu 18.04 using the setup script
 `sudo bash ./setup.sh`
 
 Start node `sudo -u nobody node server.js`. You should probably run under supervisor. See `conf/ddns.supervisor.conf` for an  example config.
+
+# Usage
+GET `/` to see the online help:
+```
+This is a ddns provider. To add a subdomain, append URL parameters.
+
+Example: /?domain=www2&ttl=600
+
+Available parameters (some may have been disable by the administrator):
+    domain:    the subdomain to add a record for
+    ip:        the ip address to add (uses your current IP if missing)
+    password:  lock the subdomain with a password, which will be required to
+               change the entries in the future
+    ttl:       ttl of the record in seconds
+    type:      record type, can be A, AAAA, MX, CNAME, etc
+
+Source: https://github.com/thingless/ddns
+```
