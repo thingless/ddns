@@ -9,15 +9,13 @@ $TTL 1800
                         )
 ; Name servers
                     IN      NS      ns1.example.com.
-                    IN      NS      ns2.example.com.
 
 ; A records for name servers
 ns1                 IN      A       192.0.2.1
-ns2                 IN      A       192.0.2.2
 
 ; Additional A records
-@                   IN      A       192.0.2.3
-www                 IN      A       192.0.2.3
+@                   IN      A       192.0.2.1
+www                 IN      A       192.0.2.1
 
 ; Dynamic DNS records
 __DYNAMIC_DNS_RECORDS__
