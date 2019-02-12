@@ -1,5 +1,5 @@
 # ddns
-A stupid simple Dynamic DNS server using NSD and node.
+A stupid simple Dynamic DNS server using NSD (a Authoritative Only DNS Server) and NodeJs.
 
 # Config
 This script reads `config.json` from the CWD. All paths are relative to the CWD.
@@ -32,7 +32,7 @@ regenerate the zone file whenever anything changes.
 To install on Ubuntu 18.04 using the setup script
 `sudo bash ./setup.sh`
 
-Start node `sudo -u nobody node server.js`. You should probably run under supervisor. See `conf/ddns.supervisor.conf` for an  example config.
+Start node `sudo -u nsd node server.js`. You should probably run under supervisor. See `conf/ddns.supervisor.conf` for an  example config.
 
 # Usage
 GET `/` to see the online help:
