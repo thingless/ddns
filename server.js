@@ -19,21 +19,50 @@ function isEmptyObject(obj) {
 
 //read the config
 var config = {
+    // these credentials must be sent in HTTP basic auth to access the API at all
+    // unless this first parameter is true
+    'api_anonymous_allowed': false,
     'api_username': 'ddns',
     'api_password': 'password',
-    'api_anonymous_allowed': false,
+
+    // if registration is not open, admin password is required for registering new domain
+    // while the domain update password can be used just for updating
+    'open_registration': true,
+
+    // if this is set, admin password can be passed to allow updating or deleting domains
+    // even without their domain specific password
+    'admin_password': null,
+
+    // if set, records more than this many seconds old will be omitted from the zone file
+    // though they are kept in the DB in case they need to be recovered.
+    'max_age': null,
+
+    // listen port for the web server
     'port': 8080,
+
+    // serve this file in response to GET with no params
+    'index_file': 'index.txt',
+
+    // set these to match your NSD settings
+    'dns_pid_file': '/run/nsd/nsd.pid',
     'zone_output_path': '/tmp/example.com.zone',
+
+    // paths to the template file & JSON flat-file DNS database
     'zone_template_path': 'conf/example.com.zonetemplate',
     'database_path': 'dnsDB.json',
-    'dns_pid_file': '/run/nsd/nsd.pid',
-    'param_blacklist': ['type', 'ip'],
-    'index_file': 'index.txt',
+
+    // hostnames that may not be registered
     'domain_blacklist': ['www', '@', 'smtp', 'imap', 'ns', 'pop', 'pop3', 'ftp', 'm', 'mail', 'blog', 'wiki', 'ns1', 'ns2', 'ns3'],
+
+    // values that may not be provided by the api client and must be inferred by the ddns server
+    'param_blacklist': ['type', 'ip'],
+
+    // validation for provided values
     'param_validation': {
         'domain': /^[-a-zA-Z0-9]{0,200}$/,
         'ttl': /^[1-9][0-9]{1,15}$/,
         'password': /^.{1,100}$/,
+	'type': /^(A|AAAA|CNAME)$/i
     },
     //'param_whitelist': ['domain', 'ttl', 'password'], // Does nothing, for documentation
 }
@@ -70,20 +99,23 @@ var credentialsRegExp = /^ *(?:[Bb][Aa][Ss][Ii][Cc]) +([A-Za-z0-9\-\._~\+\/]+=*)
 
 function zone_record(record) {
   if (record.ttl) {
-    return record.domain + " IN " + record.type + " " + record.ttl + " " + record.ip;
+    return record.domain + " IN " + record.ttl + " " + record.type + " " + record.ip;
   } else {
     return record.domain + " IN " + record.type + " " + record.ip;
   }
 }
 function zone_file(template, records) {
   template_records = []
-  var domain, record;
+  var typ, domain, record;
   for (typ in records){
     for (domain in records[typ]){
-      template_records.push(zone_record(records[typ][domain]));
+      record = records[typ][domain];
+      if (!record.expired) {
+        template_records.push(zone_record(record));
+      }
     }
   }
-  dynamic_dns_records = template_records.join('\n') + "\n";
+  var dynamic_dns_records = template_records.join('\n') + "\n";
   var zone = template.replace("__DYNAMIC_DNS_RECORDS__", dynamic_dns_records).replace("__SERIAL_NUMBER__", Math.floor((new Date()).getTime()/1000));
   return zone;
 }
@@ -149,19 +181,58 @@ function handleRequest(req, res){
   //update record object
   var type = queryParams.type || (ipv6 ? "AAAA" : "A");
   var password = queryParams.password;
+  var adminPassword = queryParams.adminpassword;
   var record = {ip: ip, domain:domain, type: type};
   if (ttl) record.ttl = ttl;
   if (password) record.password = password;
+  record.last_update_time = (new Date()).toISOString();
 
-  // Optional password auth on a per-domain basis (can be disabled in blacklist)
-  var existingPassword = records[record.type] && records[record.type][domain] && records[record.type][domain].password;
-  if (existingPassword && existingPassword !== record.password) {
+  var existingRecord = records[record.type] && records[record.type][domain];
+
+  // If we're registering a new domain & reg password is enabled, ensure it's correct
+  if (!config.open_registration && !existingRecord && config.admin_password !== adminPassword) {
+    respond(res, 401, {error:'registration password incorrect'});
+    return;
+  }
+
+  // If we're adding a domain & we have a registration password, require a password for update as well
+  if (!config.open_registration && !existingRecord && !record.password) {
+    respond(res, 400, {error:'must supply update password'});
+    return;
+  }
+
+  // If we're updating a domain & it has a password, ensure it's correct
+  // Unless the admin password is configured & passed as adminPassword
+  var existingPassword = existingRecord && existingRecord.password;
+  var domainPwBad = existingPassword && existingPassword !== record.password;
+  var adminPwBad = !config.admin_password || config.admin_password !== adminPassword;
+  if (domainPwBad && adminPwBad) {
     respond(res, 401, {error:'unauthorized'})
     return;
   }
 
   records[record.type] = records[record.type] || {}
   records[record.type][domain] = record;
+
+  //delete if that's our method
+  if (req.method === 'DELETE' && domain) {
+    delete records[record.type][domain];
+    record = {deleted: true};
+  }
+
+  //purge aged-out records
+  if (config.max_age) {
+    var now = new Date();
+    for (var type in records) {
+      for (var domain in records[type]) {
+        var rec = records[type][domain];
+        var recDate = new Date(rec.last_update_time);
+        if ((now - recDate) / 1000 > config.max_age) {
+          rec.expired = true;
+        }
+      }
+    }
+  }
 
   //save bind file
   fs.readFile(config.zone_template_path, 'utf8', function(err, template) {
@@ -182,11 +253,11 @@ function handleRequest(req, res){
   //save dnsDB.json
   fs.writeFile(config.database_path, JSON.stringify(records,null,4), function(err){
     if(err){
-        console.error('Error writeing dnsDB.json: ' + err);
+        console.error('Error writing dnsDB.json: ' + err);
     }
   })
 
-  respond(res, 200, records[record.type][domain]);
+  respond(res, 200, record);
 }
 
 function sendSIGHUP(){
