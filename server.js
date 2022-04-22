@@ -62,7 +62,7 @@ var config = {
         'domain': /^[-a-zA-Z0-9]{0,200}$/,
         'ttl': /^[1-9][0-9]{1,15}$/,
         'password': /^.{1,100}$/,
-	'type': /^(A|AAAA|CNAME)$/i
+        'type': /^(A|AAAA|CNAME)$/i
     },
     //'param_whitelist': ['domain', 'ttl', 'password'], // Does nothing, for documentation
 }
