@@ -57,22 +57,26 @@ var config = {
     // values that may not be provided by the api client and must be inferred by the ddns server
     'param_blacklist': ['type', 'ip'],
 
-    // validation for provided values
-    'param_validation': {
-        'domain': /^[-a-zA-Z0-9]{0,200}$/,
-        'ttl': /^[1-9][0-9]{1,15}$/,
-        'password': /^.{1,100}$/,
-        'type': /^(A|AAAA|CNAME)$/i
-    },
+    // if true, allow dots in domain names
+    'allow_subdomains': false,
+
     //'param_whitelist': ['domain', 'ttl', 'password'], // Does nothing, for documentation
 }
 try {
-    var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
-    extend(config, loadedConfig)
-    console.log('Read config file')
+  var loadedConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'))
+  extend(config, loadedConfig)
+  console.log('Read config file')
 } catch (error) {
   console.error('Failed to read config file:' + error)
 }
+
+// validation for provided values
+loadedConfig.param_validation = {
+  'domain': loadedConfig.allow_subdomains ? /^[-a-zA-Z0-9\.]{0,200}$/ : /^[-a-zA-Z0-9]{0,200}$/,
+  'ttl': /^[1-9][0-9]{1,15}$/,
+  'password': /^.{1,100}$/,
+  'type': /^(A|AAAA|CNAME)$/i
+},
 
 //utils
 function decodeBase64(str) {
