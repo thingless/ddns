@@ -10,12 +10,17 @@ The following keys are supported (at time of writing):
 |`api_anonymous_allowed`| Is basic auth required            | false (required)         |
 |`api_username`      | Username for basic auth              | ddns                     |
 |`api_password`      | Password for basic auth              | password                 |
+|open_registration | If false, admin password is required to register a new domain | true |
+|admin_password    | Allows updating or deleting domains without their domain-specific password | null |
+|max_age           | Domains older than this will be omitted from the zone file  | null |
 |`port`              | Port to listen on                    | 8080                     |
 |`zone_output_path`  | Path to your zone file (in NSD)      | /etc/nsd/example.com.zone|
 |`zone_template_path`| Input path of zone template          | example.com.zonetemplate |
 |`database_path`     | Path JSON record database            | dnsDB.json               |
 |`dns_pid_file`      | Path to PID file for your DNS server | /run/nsd/nsd.pid         |
-|`param_blacklist`| These GET parameters will be ignored    | ["type","ip"]                 |
+|`param_blacklist   `| These GET parameters will be ignored | ["type","ip"]            |
+|domain_blacklist  | Hostnames that may not be registered | (see server.js)          |
+|allow_subdomains  | If set, hostnames can contain dots   | false                    |
 
 # Zone Template
 The template file is just a Bind-style zone file with two magic strings:
@@ -29,10 +34,10 @@ ddns writes its temporary state as JSON to `database_path`. This is used to
 regenerate the zone file whenever anything changes.
 
 # How to run?
-To install on Ubuntu 18.04 using the setup script
+To install on Ubuntu using the setup script
 `sudo bash ./setup.sh`
 
-Start node `sudo -u nsd node server.js`. You should probably run under supervisor. See `conf/ddns.supervisor.conf` for an  example config.
+Start node `sudo -u nsd node server.js`. You should probably run under supervisor. See `conf/ddns.supervisor.conf` for an example config.
 
 # Usage
 GET `/` to see the online help:

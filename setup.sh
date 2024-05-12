@@ -14,7 +14,7 @@ if [ "$(id -u)" != "0" ]; then
 fi
 set -u -e
 
-apt-get install nsd nodejs
+apt-get install nsd nodejs curl
 #copy nsd config
 cp conf/nsd.conf /etc/nsd
 sed -i "s/example.com/$1/g" /etc/nsd/nsd.conf
@@ -24,7 +24,7 @@ sed -i "s/example.com/$1/g" /etc/nsd/"$1".zone
 sed -i "s/__SERIAL_NUMBER__/$(date +%s)/g" /etc/nsd/"$1".zone
 sed -i "s/__DYNAMIC_DNS_RECORDS__//g" /etc/nsd/"$1".zone
 sed -i "s/192.0.2.1/$(curl -4 -s 'https://icanhazip.com/')/g" /etc/nsd/"$1".zone
-#copy tempalte for future updates
+#copy template for future updates
 cp conf/example.com.zonetemplate ./"$1".zonetemplate
 sed -i "s/example.com/$1/g" ./"$1".zonetemplate
 sed -i "s/192.0.2.1/$(curl -4 -s 'https://icanhazip.com/')/g" ./"$1".zonetemplate
