@@ -3,7 +3,8 @@
 var http = require('http'),
     fs = require('fs'),
     url = require('url'),
-    process = require('process')
+    process = require('process'),
+    child_process = require('child_process')
 
 function extend(obj, props) {
     for(var prop in props) {
@@ -264,12 +265,18 @@ function handleRequest(req, res){
   respond(res, 200, record);
 }
 
+function fallbackSIGHUP() {
+  // try to use killall from shell to HUP nsd
+  child_process.exec("killall -HUP nsd", () => null);
+}
+
 function sendSIGHUP(){
-  //send SIGHUP to nds
+  //send SIGHUP to nsd
   if(config['dns_pid_file']){
      fs.readFile(config['dns_pid_file'], 'utf8', function(err, pid){
        if(err){
-         console.error('Error reading dns pid file: ' + err);
+         console.warn('Error reading dns pid file: ' + err);
+         fallbackSIGHUP();
          return;
        }
        try {
